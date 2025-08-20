@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Tech Career Guide (USA/India)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Warm Neutral Harmony" - A calming palette using beige, slate, muted teal, and a soft coral accent. -->
+    <!-- Application Structure Plan: The SPA is structured thematically around four key career archetypes: "The Builders," "The Analysts," "The Guardians," and "The Strategists." This non-linear, role-based approach allows users to explore paths based on their interests rather than following the report's linear structure. A persistent top navigation bar allows users to jump between sections. The "Market Overview" provides initial context with key stats. Each archetype section features a role selector (tabs) to switch between specific jobs. This interaction dynamically updates the content pane, displaying salary charts, skill lists, career path diagrams, and strategic advice for the selected role. This design prioritizes user-driven exploration and comparison, making the dense information from the report more digestible and personalized. -->
+    <!-- Visualization & Content Choices: 
+        - Market Overview Stats (Inform): Displayed as large, dynamic numbers for immediate impact.
+        - Role Comparison (Compare): A primary bar chart compares median pay and job growth across all roles, updated by user interaction. Goal: Provide a high-level comparison. Method: Chart.js Bar Chart. Interaction: Tooltips on hover for details. Justification: Bar charts are excellent for direct comparison of quantitative data.
+        - Salary Progression (Change): A line chart shows salary growth from entry-level to senior for the selected role. Goal: Illustrate earning potential over time. Method: Chart.js Line Chart. Interaction: Updates dynamically when a new role is selected. Justification: Line charts effectively show trends over a continuous variable (experience).
+        - Career Path (Organize): A structured HTML/CSS diagram visualizes the progression from entry-level to advanced roles. Goal: Clarify career trajectories. Method: Tailwind CSS (flexbox/grid). Interaction: Key roles are highlighted. Justification: A visual, non-chart diagram is clearer for showing hierarchical or sequential relationships.
+        - Essential Skills (Inform/Organize): Presented as a tagged list. Goal: Quickly convey required skills. Method: HTML/CSS with Tailwind. Interaction: N/A. Justification: Simple, scannable lists are best for this type of information.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F3; /* Warm Beige */
+            color: #4A5568; /* Slate Gray */
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            border-bottom-color: #F56565; /* Soft Coral */
+            color: #2D3748;
+        }
+        .tab-link {
+            transition: all 0.3s ease;
+        }
+        .tab-link.active {
+            background-color: #4FD1C5; /* Muted Teal */
+            color: white;
+        }
+        .currency-toggle {
+            transition: all 0.3s ease;
+            border: 1px solid #4FD1C5;
+        }
+        .currency-toggle.active {
+            background-color: #4FD1C5;
+            color: white;
+        }
+        .content-card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Global Tech Career Navigator</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link active">Market Overview</a>
+                <a href="#builders" class="nav-link">The Builders</a>
+                <a href="#analysts" class="nav-link">The Analysts</a>
+                <a href="#guardians" class="nav-link">The Guardians</a>
+                <a href="#strategists" class="nav-link">The Strategists</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none">
+                <span class="text-3xl">☰</span>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
+             <a href="#overview" class="block nav-link text-center">Market Overview</a>
+             <a href="#builders" class="block nav-link text-center">The Builders</a>
+             <a href="#analysts" class="block nav-link text-center">The Analysts</a>
+             <a href="#guardians" class="block nav-link text-center">The Guardians</a>
+             <a href="#strategists" class="block nav-link text-center">The Strategists</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <section id="overview" class="text-center mb-20">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">The 2025 Global Tech Job Landscape</h2>
+            <p class="max-w-3xl mx-auto text-lg mb-10">
+                The tech sector is booming globally, from Silicon Valley to tech hubs like Bengaluru and Hyderabad. This guide provides a strategic overview of key roles in both the US and Indian markets to help you navigate your career path.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="content-card p-6">
+                    <p class="text-4xl md:text-5xl font-bold text-teal-500 mb-2">$105k | ₹18LPA</p>
+                    <p class="text-lg font-semibold">Median Tech Wage</p>
+                    <p class="text-sm">Represents a significant premium in both markets.</p>
+                </div>
+                <div class="content-card p-6">
+                    <p class="text-4xl md:text-5xl font-bold text-teal-500 mb-2">36%</p>
+                    <p class="text-lg font-semibold">Fastest Growing Role</p>
+                    <p class="text-sm">Projected growth for Data Scientists is high globally.</p>
+                </div>
+                 <div class="content-card p-6">
+                    <p class="text-4xl md:text-5xl font-bold text-teal-500 mb-2">$230B+</p>
+                    <p class="text-lg font-semibold">India's IT Market</p>
+                    <p class="text-sm">A major engine of global tech talent and growth.</p>
+                </div>
+            </div>
+            <div class="content-card mt-12 p-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Comparing Career Paths: Salary vs. Growth</h3>
+                <p class="max-w-2xl mx-auto text-md mb-6">
+                    This chart compares median salaries and projected job growth. Use the controls to sort the data and switch between USD and INR for salary comparison.
+                </p>
+                <div class="flex justify-center items-center space-x-4 mb-4">
+                    <div>
+                        <label for="sort-chart" class="mr-2 font-semibold">Sort by:</label>
+                        <select id="sort-chart" class="p-2 rounded-md border border-gray-300">
+                            <option value="medianPay">Median Pay (High to Low)</option>
+                            <option value="growth">Job Growth (High to Low)</option>
+                            <option value="name">Role Name (A-Z)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Currency:</span>
+                        <button id="overview-usd-btn" class="currency-toggle px-3 py-1 rounded-l-md active">USD</button>
+                        <button id="overview-inr-btn" class="currency-toggle px-3 py-1 rounded-r-md">INR</button>
+                    </div>
+                </div>
+                <div class="chart-container h-96 md:h-[50vh] max-h-[500px]">
+                    <canvas id="overviewChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <div id="role-details-container" class="space-y-20"></div>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p class="text-sm text-gray-400">This is an interactive visualization for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        const rolesData = {
+            builders: {
+                title: "The Builders",
+                icon: "🏗️",
+                description: "These professionals are the architects and constructors of the digital world, creating the applications, systems, and platforms that power modern life.",
+                roles: {
+                    softwareDeveloper: {
+                        name: "Software Developer",
+                        medianPay: 131450, medianPayInr: 2000000,
+                        growth: 17,
+                        salaryProgression: { entry: 87000, mid: 110000, senior: 150000 },
+                        salaryProgressionInr: { entry: 800000, mid: 1500000, senior: 2800000 },
+                        dayInLife: "A junior developer's day involves understanding a large codebase, fixing bugs, and collaborating with a mentor. They participate in code reviews and gradually take on small features within a larger project, whether at a Silicon Valley startup or a major IT service firm in India.",
+                        toolkit: ["Python/Java/JS", "Data Structures", "Algorithms", "SQL", "Git", "Agile/DevOps"],
+                        careerPath: ["Junior Developer", "Mid-Level Developer", "Senior Developer", "Tech Lead / Principal Engineer"],
+                        entryStrategy: "Build a strong portfolio. In the US, pursue certifications like AWS Certified Developer. In India, platforms like NASSCOM's FutureSkills Prime are valuable. Participate in hackathons to stand out."
+                    },
+                    itSupport: {
+                        name: "IT Support Specialist",
+                        medianPay: 61550, medianPayInr: 600000,
+                        growth: 6,
+                        salaryProgression: { entry: 45000, mid: 61550, senior: 80000 },
+                        salaryProgressionInr: { entry: 350000, mid: 600000, senior: 900000 },
+                        dayInLife: "An IT support specialist diagnoses hardware and software problems, sets up new user accounts, and provides direct technical assistance to employees, a critical role in companies of all sizes.",
+                        toolkit: ["Troubleshooting", "Customer Service", "Windows/Linux/macOS", "Networking", "Active Directory"],
+                        careerPath: ["Help Desk Tech", "System Administrator", "Network Engineer / Security Analyst"],
+                        entryStrategy: "Focus on certifications like CompTIA A+ or Google IT Support Professional Certificate. This role is an excellent gateway to advanced infrastructure careers, especially within large IT service companies in India."
+                    }
+                }
+            },
+            analysts: {
+                title: "The Analysts",
+                icon: "📊",
+                description: "These roles are focused on extracting meaningful insights from data, translating raw numbers into actionable business intelligence and predictive models.",
+                roles: {
+                    dataAnalyst: {
+                        name: "Data Analyst",
+                        medianPay: 103790, medianPayInr: 1200000,
+                        growth: 11,
+                        salaryProgression: { entry: 65000, mid: 85000, senior: 110000 },
+                        salaryProgressionInr: { entry: 600000, mid: 900000, senior: 1500000 },
+                        dayInLife: "A junior data analyst gathers and cleans data, runs SQL queries, and creates reports in tools like Tableau or Power BI. This role is in high demand in finance, e-commerce, and consulting sectors globally.",
+                        toolkit: ["SQL", "Excel", "Tableau/Power BI", "Python (Pandas)", "Statistics"],
+                        careerPath: ["Junior Analyst", "Senior Analyst", "Data Scientist / Analytics Manager"],
+                        entryStrategy: "Create a portfolio project that shows the full data lifecycle. Earn a credential like the Google Data Analytics Certificate, which has strong recognition in both the US and India."
+                    },
+                    dataScientist: {
+                        name: "Data Scientist",
+                        medianPay: 140910, medianPayInr: 2200000,
+                        growth: 36,
+                        salaryProgression: { entry: 100000, mid: 140000, senior: 190000 },
+                        salaryProgressionInr: { entry: 1000000, mid: 1800000, senior: 3500000 },
+                        dayInLife: "A data scientist applies statistical methods and machine learning algorithms to build predictive models. They work on more exploratory and complex problems than analysts, often in specialized tech teams.",
+                        toolkit: ["Python (Scikit-learn)", "R", "SQL", "Machine Learning", "Advanced Statistics", "Big Data Tech"],
+                        careerPath: ["Associate Data Scientist", "Data Scientist", "Senior Data Scientist", "Lead Scientist"],
+                        entryStrategy: "Often requires an advanced degree. A strong portfolio with predictive modeling projects is crucial. Starting as a Data Analyst is a common pathway in both markets."
+                    }
+                }
+            },
+            guardians: {
+                title: "The Guardians",
+                icon: "🛡️",
+                description: "These professionals protect an organization's digital assets, defending against cyber threats and ensuring the reliability and security of infrastructure.",
+                roles: {
+                    cybersecurityAnalyst: {
+                        name: "Cybersecurity Analyst",
+                        medianPay: 124910, medianPayInr: 1500000,
+                        growth: 33,
+                        salaryProgression: { entry: 85000, mid: 110000, senior: 140000 },
+                        salaryProgressionInr: { entry: 700000, mid: 1200000, senior: 2000000 },
+                        dayInLife: "A junior analyst monitors network traffic for suspicious activity, investigates security alerts, and assists in incident response. This role is critical in sectors like banking and government.",
+                        toolkit: ["SIEM (Splunk)", "Firewalls", "IDS/IPS", "Vulnerability Scanners", "Network Protocols"],
+                        careerPath: ["SOC Analyst", "Security Analyst", "Penetration Tester / Security Engineer"],
+                        entryStrategy: "Certifications are key. Start with CompTIA Security+ or (ISC)² CC. Build a home lab to practice skills and document your work on platforms like TryHackMe."
+                    },
+                    cloudEngineer: {
+                        name: "Cloud Engineer",
+                        medianPay: 130390, medianPayInr: 2000000,
+                        growth: 17,
+                        salaryProgression: { entry: 90000, mid: 130000, senior: 170000 },
+                        salaryProgressionInr: { entry: 800000, mid: 1600000, senior: 3000000 },
+                        dayInLife: "A cloud engineer designs, builds, and maintains an organization's cloud infrastructure. They automate server provisioning, configure networks, and ensure scalability on platforms like AWS, Azure, or GCP.",
+                        toolkit: ["AWS/Azure/GCP", "Linux", "Networking", "Terraform/IaC", "Docker/Kubernetes"],
+                        careerPath: ["Cloud Support", "Cloud Engineer", "Senior Cloud Engineer", "Solutions Architect"],
+                        entryStrategy: "Focus on certifications for a major platform, like AWS Certified Solutions Architect - Associate. Build portfolio projects like deploying a multi-tier web app on the cloud."
+                    }
+                }
+            },
+            strategists: {
+                title: "The Strategists",
+                icon: "🧭",
+                description: "These roles operate at the intersection of technology, business, and user needs, guiding product direction, user experience, and process efficiency.",
+                roles: {
+                    productManager: {
+                        name: "Product Manager",
+                        medianPay: 169000, medianPayInr: 2800000,
+                        growth: 11,
+                        salaryProgression: { entry: 90000, mid: 130000, senior: 180000 },
+                        salaryProgressionInr: { entry: 1200000, mid: 2200000, senior: 4500000 },
+                        dayInLife: "An Associate PM supports senior PMs by conducting market research, gathering user feedback, and helping to prioritize the product backlog. This role is highly sought after in product-led companies.",
+                        toolkit: ["Communication", "Stakeholder Management", "Data Analysis", "User Research", "Agile"],
+                        careerPath: ["Associate PM", "Product Manager", "Senior PM", "Director of Product"],
+                        entryStrategy: "APM programs are very competitive. A common path is to gain experience in a related role (e.g., software engineering in a Bengaluru startup) and then make an internal transfer."
+                    },
+                    uiUxDesigner: {
+                        name: "UI/UX Designer",
+                        medianPay: 95380, medianPayInr: 1000000,
+                        growth: 8,
+                        salaryProgression: { entry: 70000, mid: 95000, senior: 125000 },
+                        salaryProgressionInr: { entry: 500000, mid: 900000, senior: 1600000 },
+                        dayInLife: "A designer conducts user research, creates wireframes and interactive prototypes, and performs usability testing to ensure a product is intuitive and solves user problems.",
+                        toolkit: ["Figma/Sketch/Adobe XD", "User Research", "Wireframing", "Prototyping", "Visual Design"],
+                        careerPath: ["Junior Designer", "Mid-Level Designer", "Senior/Lead Designer", "UX Manager"],
+                        entryStrategy: "Your portfolio is everything. Create 2-3 detailed case studies. An unsolicited redesign of a popular app (e.g., a widely used Indian super-app) is a great way to showcase your design process."
+                    }
+                }
+            }
+        };
+
+        let overviewChartInstance;
+        let salaryChartInstances = {};
+
+        function renderRoleDetails() {
+            const container = document.getElementById('role-details-container');
+            container.innerHTML = '';
+
+            for (const key in rolesData) {
+                const category = rolesData[key];
+                const section = document.createElement('section');
+                section.id = key;
+                section.className = 'pt-16 -mt-16';
+
+                let tabsHtml = '';
+                Object.keys(category.roles).forEach((roleKey, index) => {
+                    tabsHtml += `<button class="tab-link px-4 py-2 rounded-full font-semibold ${index === 0 ? 'active' : ''}" data-category="${key}" data-role="${roleKey}">${category.roles[roleKey].name}</button>`;
+                });
+
+                section.innerHTML = `
+                    <div class="text-center mb-12">
+                        <span class="text-6xl mb-4 inline-block">${category.icon}</span>
+                        <h2 class="text-4xl font-bold text-gray-800 mb-4">${category.title}</h2>
+                        <p class="max-w-2xl mx-auto text-lg">${category.description}</p>
+                    </div>
+                    <div class="flex justify-center flex-wrap gap-2 mb-8" id="tabs-${key}">
+                        ${tabsHtml}
+                    </div>
+                    <div id="content-${key}"></div>
+                `;
+                container.appendChild(section);
+                
+                renderRoleContent(key, Object.keys(category.roles)[0]);
+            }
+        }
+
+        function renderRoleContent(categoryKey, roleKey) {
+            const role = rolesData[categoryKey].roles[roleKey];
+            const contentContainer = document.getElementById(`content-${categoryKey}`);
+            const chartId = `salaryChart-${categoryKey}-${roleKey}`;
+            
+            contentContainer.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div class="content-card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-bold text-gray-800">Salary Progression</h3>
+                            <div>
+                                <button class="currency-toggle salary-toggle px-3 py-1 rounded-l-md active" data-chart-id="${chartId}" data-currency="usd">USD</button>
+                                <button class="currency-toggle salary-toggle px-3 py-1 rounded-r-md" data-chart-id="${chartId}" data-currency="inr">INR</button>
+                            </div>
+                        </div>
+                        <p class="text-sm mb-4">Estimated annual salary based on experience level.</p>
+                        <div class="chart-container h-64 md:h-80">
+                            <canvas id="${chartId}"></canvas>
+                        </div>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Career Path</h3>
+                        <p class="text-sm mb-4">A typical trajectory for this role.</p>
+                        <div class="relative pl-6">
+                            ${role.careerPath.map((step, index) => `
+                                <div class="flex items-center">
+                                    <div class="absolute left-0 w-6 h-6 rounded-full ${index === 0 ? 'bg-teal-500' : 'bg-gray-300'} flex items-center justify-center text-white font-bold">${index + 1}</div>
+                                    ${index < role.careerPath.length - 1 ? '<div class="absolute left-3 top-7 bottom-0 w-0.5 bg-gray-300"></div>' : ''}
+                                    <p class="font-semibold text-lg ml-4 mb-6">${step}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="content-card lg:col-span-2 p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">A Day in the Life</h3>
+                        <p>${role.dayInLife}</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Essential Toolkit</h3>
+                        <div class="flex flex-wrap gap-2">
+                            ${role.toolkit.map(skill => `<span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Strategic Entry Plan</h3>
+                        <p>${role.entryStrategy}</p>
+                    </div>
+                </div>
+            `;
+
+            createSalaryChart(chartId, role);
+        }
+
+        function createSalaryChart(canvasId, roleData) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (salaryChartInstances[canvasId]) {
+                salaryChartInstances[canvasId].destroy();
+            }
+            salaryChartInstances[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Entry-Level', 'Mid-Level', 'Senior-Level'],
+                    datasets: [{
+                        label: 'Annual Salary (USD)',
+                        data: Object.values(roleData.salaryProgression),
+                        borderColor: '#4FD1C5',
+                        backgroundColor: 'rgba(79, 209, 197, 0.2)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: getChartOptions('usd')
+            });
+        }
+
+        function updateSalaryChart(canvasId, roleData, currency) {
+            const chart = salaryChartInstances[canvasId];
+            if (!chart) return;
+            
+            const data = currency === 'usd' ? roleData.salaryProgression : roleData.salaryProgressionInr;
+            chart.data.datasets[0].data = Object.values(data);
+            chart.data.datasets[0].label = `Annual Salary (${currency.toUpperCase()})`;
+            chart.options = getChartOptions(currency);
+            chart.update();
+        }
+
+        function getChartOptions(currency) {
+            const formatCallback = currency === 'usd'
+                ? value => '$' + (value / 1000) + 'k'
+                : value => '₹' + (value / 100000).toFixed(1) + 'L';
+            
+            const tooltipCallback = currency === 'usd'
+                ? context => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(context.parsed.y)
+                : context => '₹' + new Intl.NumberFormat('en-IN', { maximumSignificantDigits: 3 }).format(context.parsed.y);
+
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: { callback: formatCallback }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) label += tooltipCallback(context);
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+        }
+        
+        function createOverviewChart(sortKey = 'medianPay', currency = 'usd') {
+            const allRoles = Object.values(rolesData).flatMap(cat => Object.values(cat.roles));
+            const payKey = currency === 'usd' ? 'medianPay' : 'medianPayInr';
+
+            allRoles.sort((a, b) => {
+                if (sortKey === 'name') return a.name.localeCompare(b.name);
+                const sortPayKey = sortKey === 'medianPay' ? payKey : 'growth';
+                return b[sortPayKey] - a[sortPayKey];
+            });
+
+            const labels = allRoles.map(r => r.name);
+            const medianPayData = allRoles.map(r => r[payKey]);
+            const growthData = allRoles.map(r => r.growth);
+
+            const ctx = document.getElementById('overviewChart').getContext('2d');
+            
+            if (overviewChartInstance) {
+                overviewChartInstance.destroy();
+            }
+            
+            const payAxisTitle = currency === 'usd' ? 'Median Pay (USD)' : 'Median Pay (INR)';
+            const payTickCallback = currency === 'usd'
+                ? value => '$' + (value / 1000) + 'k'
+                : value => '₹' + (value / 100000) + 'L';
+
+            overviewChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: payAxisTitle,
+                            data: medianPayData,
+                            backgroundColor: '#4FD1C5',
+                            borderColor: '#4FD1C5',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Job Growth (%)',
+                            data: growthData,
+                            backgroundColor: '#F56565',
+                            borderColor: '#F56565',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 } },
+                        y: {
+                            type: 'linear', display: true, position: 'left',
+                            title: { display: true, text: payAxisTitle },
+                            ticks: { callback: payTickCallback }
+                        },
+                        y1: {
+                            type: 'linear', display: true, position: 'right',
+                            title: { display: true, text: 'Projected Growth (%)' },
+                            grid: { drawOnChartArea: false },
+                            ticks: { callback: value => value + '%' }
+                        }
+                    },
+                    plugins: { tooltip: { mode: 'index', intersect: false } }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRoleDetails();
+            createOverviewChart();
+
+            document.getElementById('sort-chart').addEventListener('change', (e) => {
+                const currency = document.querySelector('#overview-usd-btn.active') ? 'usd' : 'inr';
+                createOverviewChart(e.target.value, currency);
+            });
+
+            document.getElementById('overview-usd-btn').addEventListener('click', () => {
+                createOverviewChart(document.getElementById('sort-chart').value, 'usd');
+                document.getElementById('overview-usd-btn').classList.add('active');
+                document.getElementById('overview-inr-btn').classList.remove('active');
+            });
+            document.getElementById('overview-inr-btn').addEventListener('click', () => {
+                createOverviewChart(document.getElementById('sort-chart').value, 'inr');
+                document.getElementById('overview-inr-btn').classList.add('active');
+                document.getElementById('overview-usd-btn').classList.remove('active');
+            });
+
+            document.getElementById('role-details-container').addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-link')) {
+                    const categoryKey = e.target.dataset.category;
+                    const roleKey = e.target.dataset.role;
+
+                    document.querySelectorAll(`#tabs-${categoryKey} .tab-link`).forEach(tab => tab.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    renderRoleContent(categoryKey, roleKey);
+                }
+                if (e.target.classList.contains('salary-toggle')) {
+                    const chartId = e.target.dataset.chartId;
+                    const currency = e.target.dataset.currency;
+                    const [,categoryKey, roleKey] = chartId.split('-');
+                    const roleData = rolesData[categoryKey].roles[roleKey];
+                    
+                    e.target.parentElement.querySelectorAll('.salary-toggle').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    updateSalaryChart(chartId, roleData, currency);
+                }
+            });
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 70) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    if (mobileMenu.classList.contains('hidden') === false) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
